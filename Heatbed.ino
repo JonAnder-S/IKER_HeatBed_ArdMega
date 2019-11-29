@@ -31,20 +31,33 @@ void loop() {
 
 
 void c_kalkulatu(){
-  float Vcc = 4.50; //readVcc() / 1000.0; // leer el voltaje que llega al arduino
+  float Vcc = readVcc() / 1000.0; // leer el voltaje que llega al arduino
   float raw =  analogRead(TEMP_SENSOR_BED);
   float V = raw / 1023 * Vcc;
-  //float R = (Rc * V ) / (Vcc - V);
-  float R = (Rc * Vcc / V) - Rc;
+  //Vout = Vin * (R / R+Rt)
+  float R = (Rc * V ) / (Vcc - V); //bertsio honetarako ez du balio, Vcc -/\/\/R---V----/\/\/-Rt--
+  //float R = (Rc * Vcc / V) - Rc;
   float logR  = log(R);
   float R_th = 1.0 / (A + B * logR + C * pow(logR,3));
   float kelvin = R_th - V * V / (K * R) * 1000;
   float celsius = kelvin - 273.15;
 
  // Serial.print(raw/1023*5);
+  Serial.print("R: ");
+  Serial.print(R);
+  Serial.print(' ');
+
+Serial.print("V: ");
   Serial.print(V);
   Serial.print(' ');
-  Serial.println(R);
+
+  Serial.print("Vcc: ");
+  Serial.print(Vcc);
+  Serial.print(' ');
+
+  Serial.print("Celsius: ");
+  Serial.print(celsius);
+  Serial.println(' ');
   //  Serial.println(V);
 
 
@@ -58,6 +71,7 @@ long readVcc() {
   // Read 1.1V reference against AVcc
 #if defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
   //ADMUX = _BV(REFS0) | _BV(MUX4) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1);
+  ADMUX = bit (REFS0) | bit (REFS1);
 #elif defined (__AVR_ATtiny24__) || defined(__AVR_ATtiny44__) || defined(__AVR_ATtiny84__)
   ADMUX = _BV(MUX5) | _BV(MUX0);
 #elif defined (__AVR_ATtiny25__) || defined(__AVR_ATtiny45__) || defined(__AVR_ATtiny85__)
