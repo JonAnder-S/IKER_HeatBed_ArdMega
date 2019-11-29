@@ -3,7 +3,7 @@
 #define TEMP_SENSOR_BED 14 //termistorea input
 
 #define  Rc  100000 //valor de la resistencia 
-const float A = 1.018066970e-3;    const float B = 2.302721424e-4;   const float C = 2.743131281e-7;
+const float A = 1.11492089e-3;    const float B = 2.372075385e-4;   const float C = 6.954079529e-8;
 const float K = 2.5; //factor de disipacion en mW/C
 
 
@@ -16,8 +16,6 @@ void setup() {
   setPins();
   //EncKonfig_1();//Enc(); 
 
-
-  
   int value = map(12,0,12,0,255);
   analogWrite(D8,value);
 }
@@ -25,28 +23,32 @@ void setup() {
 void loop() {
 
   c_kalkulatu();
-
-
-}
-
-
-void setPins(){
-  pinMode(D8, OUTPUT);
-  pinMode(TEMP_SENSOR_BED, INPUT);
+  //c_kalk1();
 
 }
+
+
+
 
 void c_kalkulatu(){
-  float Vcc =  readVcc() / 1000.0; // leer el voltaje que llega al arduino
+  float Vcc = 4.50; //readVcc() / 1000.0; // leer el voltaje que llega al arduino
   float raw =  analogRead(TEMP_SENSOR_BED);
-  float V = raw / 1024 * Vcc;
-  float R = (Rc * V ) / (Vcc - V);
+  float V = raw / 1023 * Vcc;
+  //float R = (Rc * V ) / (Vcc - V);
+  float R = (Rc * Vcc / V) - Rc;
   float logR  = log(R);
   float R_th = 1.0 / (A + B * logR + C * pow(logR,3));
   float kelvin = R_th - V * V / (K * R) * 1000;
   float celsius = kelvin - 273.15;
 
-  Serial.println(celsius);
+ // Serial.print(raw/1023*5);
+  Serial.print(V);
+  Serial.print(' ');
+  Serial.println(R);
+  //  Serial.println(V);
+
+
+
 
 }
 
@@ -55,7 +57,7 @@ long readVcc() {
   long result;
   // Read 1.1V reference against AVcc
 #if defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
-  //ADMUX = _BV(REFS0) | _BV(MUX4) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1); //hau jarrita 5V, bestela 1.1V
+  //ADMUX = _BV(REFS0) | _BV(MUX4) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1);
 #elif defined (__AVR_ATtiny24__) || defined(__AVR_ATtiny44__) || defined(__AVR_ATtiny84__)
   ADMUX = _BV(MUX5) | _BV(MUX0);
 #elif defined (__AVR_ATtiny25__) || defined(__AVR_ATtiny45__) || defined(__AVR_ATtiny85__)
@@ -70,7 +72,14 @@ long readVcc() {
   while (bit_is_set(ADCSRA, ADSC));
   result = ADCL;
   result |= ADCH << 8;
-  result = 1125300L / result; // Calculate Vcc (in mV); 1125300 = 1.1*1023*1000  
-  //Serial.println(result); 
+    //result = 1126400L / result; // Calculate Vcc (in mV); 1125300 = 1.1*1024*1000
+  result = 1125300L / result; // Calculate Vcc (in mV); 1125300 = 1.1*1023*1000   
+  //Serial.println(result);
   return result;
+}
+
+
+void setPins(){
+  pinMode(D8, OUTPUT);
+  pinMode(TEMP_SENSOR_BED, INPUT);
 }
