@@ -17,7 +17,7 @@ const float A = 1.224530327e-3;    const float B = 0.7652751597e-4;   const floa
 const float K = 2.5; //factor de disipacion en mW/C
 
 double Setpoint = 60, Input, Output;
-const long Kp=40, Ki=10, Kd=70;
+const long Kp=20, Ki=5, Kd=70;
 
 PID myPID(&Input, &Output, &Setpoint,Kp,Ki,Kd, DIRECT);
 
