@@ -40,7 +40,7 @@ void c_kalkulatu(){
   float logR  = log(R);
   float R_th = 1.0 / (A + B * logR + C * pow(logR,3));
   float kelvin = R_th - V * V / (K * R) * 1000;
-  float celsius = kelvin - 273.15;
+  float celsius = KtoC(kelvin);
 
  // Serial.print(raw/1023*5);
   Serial.print("R: ");
@@ -55,7 +55,7 @@ void c_kalkulatu(){
   Serial.print(Vcc-V);
   Serial.print(' ');
 
-Serial.print("V: ");
+  Serial.print("V: ");
   Serial.print(V);
   Serial.print(' ');
 
@@ -71,6 +71,10 @@ Serial.print("V: ");
 
 
 
+}
+
+float KtoC(float K){
+  return K - 273.15;
 }
 
 
