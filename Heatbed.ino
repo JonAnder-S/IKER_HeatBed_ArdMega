@@ -4,11 +4,20 @@
 #define TEMP_SENSOR_BED 14 //termistorea input
 
 #define  Rc  4700 //valor de la resistencia 
-const float A = 0.58e-3;    const float B = 2.37e-4;   const float C = 6.95e-8;
+
+/*
+ * https://www.thinksrs.com/downloads/programs/therm%20calc/ntccalibrator/ntccalculator.html
+48º <-> 49k
+32º <-> 75k
+70º <-> 28k
+//const float A = 1.224530327e-3;    const float B = 0.7652751597e-4;   const float C = 8.437960719e-7;
+
+*/
+const float A = 1.224530327e-3;    const float B = 0.7652751597e-4;   const float C = 8.437960719e-7;
 const float K = 2.5; //factor de disipacion en mW/C
 
-double Setpoint = 40, Input, Output;
-const long Kp=30, Ki=1, Kd=10;
+double Setpoint = 60, Input, Output;
+const long Kp=40, Ki=10, Kd=70;
 
 PID myPID(&Input, &Output, &Setpoint,Kp,Ki,Kd, DIRECT);
 
@@ -26,7 +35,7 @@ void setup() {
 
 void loop() {
 
-  Input = c_kalkulatu();
+  Input = c_smoothie(); //c_kalkulatu();
   myPID.Compute();
   Serial.println(Output);
   analogWrite(D8,Output);
@@ -35,48 +44,17 @@ void loop() {
 
 }
 
-//https://learn.adafruit.com/thermistor/using-a-thermistor
-void   c_kalk1(){
-   float Vcc = readVcc() / 1000.0; 
-   float raw =  analogRead(TEMP_SENSOR_BED);
-   float  V = (1023 / raw)  - 1;     // (1023/ADC - 1) 
-   float R = Rc / V;  // 4.7K / (1023/ADC - 1)
-
-   float logR  = log(R);
-   float Tk = 1.0 / (A + B * logR + C * pow(logR,3));
-   float kelvin = Tk - V * V / (K * R) * 1000;
-   float celsius = KtoC(kelvin);
-
-  Serial.print("R: ");
-  Serial.print(R);
-  Serial.print(' ');
-
-  Serial.print("Rc*v: ");
-  Serial.print(V*Rc);
-  Serial.print(' ');
-
-  Serial.print("Vcc-V: ");
-  Serial.print(Vcc-V);
-  Serial.print(' ');
-
-  Serial.print("V: ");
-  Serial.print(V);
-  Serial.print(' ');
-
-  Serial.print("Vcc: ");
-  Serial.print(Vcc);
-  Serial.print(' ');
-
-  Serial.print("kelvin: ");
-  Serial.print(kelvin);
-  Serial.print(' ');
-
-  Serial.print("Celsius: ");
-  Serial.print(celsius);
-  Serial.println(' ');
+double c_smoothie(){
+  int n = 10;
+  double temp=0;
+  for(int i = 0; i<n; i++){
+    temp += c_kalkulatu();
+  }
+  temp/=n;
+  Serial.print(temp);
+  Serial.print(" ");
+  return temp;
 }
-
-
 
 double c_kalkulatu(){
   float Vcc = readVcc() / 1000.0; // leer el voltaje que llega al arduino
@@ -90,7 +68,7 @@ double c_kalkulatu(){
   float kelvin = Tk - V * V / (K * R) * 1000;
   float celsius = KtoC(kelvin);
 
- // Serial.print(raw/1023*5);
+/*
   Serial.print("R: ");
   Serial.print(R);
   Serial.print(' ');
@@ -115,7 +93,7 @@ double c_kalkulatu(){
   Serial.print("Celsius: ");
   Serial.print(celsius);
   Serial.println(' ');
-  //  Serial.println(V);
+  //  Serial.println(V);*/
   return celsius;
 
 
