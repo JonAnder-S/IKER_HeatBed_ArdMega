@@ -34,9 +34,9 @@ void c_kalkulatu(){
   float Vcc = readVcc() / 1000.0; // leer el voltaje que llega al arduino
   float raw =  analogRead(TEMP_SENSOR_BED);
   float V = raw / 1023 * Vcc;
-  //Vout = Vin * (R / R+Rt)
-  float R = (Rc * V ) / (Vcc - V); //bertsio honetarako ez du balio, Vcc -/\/\/R---V----/\/\/-Rt--
-  //float R = (Rc * Vcc / V) - Rc;
+  //Vout = Vin * (R / R+Rt);  
+  float R = (Rc * V ) / (Vcc - V); // Vcc -/\/\/R---V----/\/\/-Rt-- temp up, v down
+  //float R = (Rc * Vcc / V) - Rc; Vcc -/\/\/Rt---V----/\/\/-R--    temp up, v up
   float logR  = log(R);
   float R_th = 1.0 / (A + B * logR + C * pow(logR,3));
   float kelvin = R_th - V * V / (K * R) * 1000;
@@ -45,6 +45,14 @@ void c_kalkulatu(){
  // Serial.print(raw/1023*5);
   Serial.print("R: ");
   Serial.print(R);
+  Serial.print(' ');
+
+  Serial.print("Rc*v: ");
+  Serial.print(V*Rc);
+  Serial.print(' ');
+
+  Serial.print("Vcc-V: ");
+  Serial.print(Vcc-V);
   Serial.print(' ');
 
 Serial.print("V: ");
