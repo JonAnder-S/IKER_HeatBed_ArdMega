@@ -2,7 +2,7 @@
 #define D8 8 //ohearen output 
 #define TEMP_SENSOR_BED 14 //termistorea input
 
-#define  Rc  100000 //valor de la resistencia 
+#define  Rc  4700 //valor de la resistencia 
 const float A = 1.11492089e-3;    const float B = 2.372075385e-4;   const float C = 6.954079529e-8;
 const float K = 2.5; //factor de disipacion en mW/C
 
@@ -27,6 +27,46 @@ void loop() {
 
 }
 
+//https://learn.adafruit.com/thermistor/using-a-thermistor
+void   c_kalk1(){
+   float Vcc = readVcc() / 1000.0; 
+   float raw =  analogRead(TEMP_SENSOR_BED);
+   float  V = (1023 / raw)  - 1;     // (1023/ADC - 1) 
+   float R = Rc / V;  // 4.7K / (1023/ADC - 1)
+
+   float logR  = log(R);
+   float Tk = 1.0 / (A + B * logR + C * pow(logR,3));
+   float kelvin = Tk - V * V / (K * R) * 1000;
+   float celsius = KtoC(kelvin);
+
+  Serial.print("R: ");
+  Serial.print(R);
+  Serial.print(' ');
+
+  Serial.print("Rc*v: ");
+  Serial.print(V*Rc);
+  Serial.print(' ');
+
+  Serial.print("Vcc-V: ");
+  Serial.print(Vcc-V);
+  Serial.print(' ');
+
+  Serial.print("V: ");
+  Serial.print(V);
+  Serial.print(' ');
+
+  Serial.print("Vcc: ");
+  Serial.print(Vcc);
+  Serial.print(' ');
+
+  Serial.print("kelvin: ");
+  Serial.print(kelvin);
+  Serial.print(' ');
+
+  Serial.print("Celsius: ");
+  Serial.print(celsius);
+  Serial.println(' ');
+}
 
 
 
@@ -36,10 +76,10 @@ void c_kalkulatu(){
   float V = raw / 1023 * Vcc;
   //Vout = Vin * (R / R+Rt);  
   float R = (Rc * V ) / (Vcc - V); // Vcc -/\/\/R---V----/\/\/-Rt-- temp up, v down
-  //float R = (Rc * Vcc / V) - Rc; Vcc -/\/\/Rt---V----/\/\/-R--    temp up, v up
+  //float R = (Rc * Vcc / V) - Rc; //Vcc -/\/\/Rt---V----/\/\/-R--    temp up, v up
   float logR  = log(R);
-  float R_th = 1.0 / (A + B * logR + C * pow(logR,3));
-  float kelvin = R_th - V * V / (K * R) * 1000;
+  float Tk = 1.0 / (A + B * logR + C * pow(logR,3));
+  float kelvin = Tk - V * V / (K * R) * 1000;
   float celsius = KtoC(kelvin);
 
  // Serial.print(raw/1023*5);
@@ -61,6 +101,10 @@ void c_kalkulatu(){
 
   Serial.print("Vcc: ");
   Serial.print(Vcc);
+  Serial.print(' ');
+
+  Serial.print("logR: ");
+  Serial.print(logR);
   Serial.print(' ');
 
   Serial.print("Celsius: ");
