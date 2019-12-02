@@ -1,11 +1,16 @@
 #include <LiquidCrystal.h>
+#include <PID_v1.h>
 #define D8 8 //ohearen output 
 #define TEMP_SENSOR_BED 14 //termistorea input
 
 #define  Rc  4700 //valor de la resistencia 
-const float A = 1.11492089e-3;    const float B = 2.372075385e-4;   const float C = 6.954079529e-8;
+const float A = 0.58e-3;    const float B = 2.37e-4;   const float C = 6.95e-8;
 const float K = 2.5; //factor de disipacion en mW/C
 
+double Setpoint = 40, Input, Output;
+const long Kp=30, Ki=1, Kd=10;
+
+PID myPID(&Input, &Output, &Setpoint,Kp,Ki,Kd, DIRECT);
 
 LiquidCrystal lcd( 16, 17, 23, 25, 27, 29);  // Para MEGA + RAMPS 1.4
 
@@ -16,13 +21,16 @@ void setup() {
   setPins();
   //EncKonfig_1();//Enc(); 
 
-  int value = map(12,0,12,0,255);
-  analogWrite(D8,value);
+  myPID.SetMode(AUTOMATIC);
 }
 
 void loop() {
 
-  c_kalkulatu();
+  Input = c_kalkulatu();
+  myPID.Compute();
+  Serial.println(Output);
+  analogWrite(D8,Output);
+
   //c_kalk1();
 
 }
@@ -70,7 +78,7 @@ void   c_kalk1(){
 
 
 
-void c_kalkulatu(){
+double c_kalkulatu(){
   float Vcc = readVcc() / 1000.0; // leer el voltaje que llega al arduino
   float raw =  analogRead(TEMP_SENSOR_BED);
   float V = raw / 1023 * Vcc;
@@ -103,15 +111,12 @@ void c_kalkulatu(){
   Serial.print(Vcc);
   Serial.print(' ');
 
-  Serial.print("logR: ");
-  Serial.print(logR);
-  Serial.print(' ');
 
   Serial.print("Celsius: ");
   Serial.print(celsius);
   Serial.println(' ');
   //  Serial.println(V);
-
+  return celsius;
 
 
 
@@ -122,12 +127,15 @@ float KtoC(float K){
 }
 
 
+//http://maxembedded.com/2011/06/the-adc-of-the-avr/
 long readVcc() {
   long result;
   // Read 1.1V reference against AVcc
 #if defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
   //ADMUX = _BV(REFS0) | _BV(MUX4) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1);
-  ADMUX = bit (REFS0) | bit (REFS1);
+  ADMUX = bit (REFS0) | bit (REFS1); //1.1v
+  //ADMUX = (0<<REFS0);     // AREF = AVcc
+  //ADMUX = 192; //11000000
 #elif defined (__AVR_ATtiny24__) || defined(__AVR_ATtiny44__) || defined(__AVR_ATtiny84__)
   ADMUX = _BV(MUX5) | _BV(MUX0);
 #elif defined (__AVR_ATtiny25__) || defined(__AVR_ATtiny45__) || defined(__AVR_ATtiny85__)
@@ -139,14 +147,19 @@ long readVcc() {
 #endif
   delay(2); // Wait for Vref to settle
   ADCSRA |= _BV(ADSC); // Convert
+   // ADC Enable and prescaler of 128
+    // 16000000/128 = 125000
+  //ADCSRA = (1<<ADEN)|(1<<ADPS2)|(1<<ADPS1)|(1<<ADPS0);
   while (bit_is_set(ADCSRA, ADSC));
   result = ADCL;
   result |= ADCH << 8;
     //result = 1126400L / result; // Calculate Vcc (in mV); 1125300 = 1.1*1024*1000
   result = 1125300L / result; // Calculate Vcc (in mV); 1125300 = 1.1*1023*1000   
   //Serial.println(result);
+  //Serial.println(ADMUX,BIN); Serial.println(ADCSRA,BIN); Serial.println(ADCL,BIN); Serial.println(ADCH,BIN);
   return result;
 }
+
 
 
 void setPins(){
