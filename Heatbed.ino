@@ -37,7 +37,7 @@ void loop() {
 
   Input = c_smoothie(); //c_kalkulatu();
   myPID.Compute();
-  Serial.println(Output);
+  //Serial.println(Output);
   analogWrite(D8,Output);
 
   //c_kalk1();
@@ -48,11 +48,13 @@ double c_smoothie(){
   int n = 10;
   double temp=0;
   for(int i = 0; i<n; i++){
-    temp += c_kalkulatu();
+    double c = c_kalkulatu();
+    //Serial.println(c);
+    temp += c;
   }
   temp/=n;
-  Serial.print(temp);
-  Serial.print(" ");
+  //Serial.print(temp);
+  //Serial.print(" ");
   return temp;
 }
 
@@ -135,6 +137,8 @@ long readVcc() {
   result = 1125300L / result; // Calculate Vcc (in mV); 1125300 = 1.1*1023*1000   
   //Serial.println(result);
   //Serial.println(ADMUX,BIN); Serial.println(ADCSRA,BIN); Serial.println(ADCL,BIN); Serial.println(ADCH,BIN);
+   Serial.println(result);
+
   return result;
 }
 
